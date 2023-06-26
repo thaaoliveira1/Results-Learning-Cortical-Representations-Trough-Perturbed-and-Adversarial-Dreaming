@@ -44,6 +44,103 @@ def initialize_weights(module):
 # Overall, this custom weight initialization function ensures that the weights of the convolutional and batch normalization layers are properly initialized with appropriate values, contributing to the effectiveness and stability of the neural network training process.
 
 # %%
+import torch
+import numpy as np
+
+class Occlude(object):
+    def __init__(self, drop_rate=0.0, tile_size=7):
+        self.drop_rate = drop_rate
+        self.tile_size = tile_size
+
+    def __call__(self, images, dim=0):
+        # Create a copy of the input images
+        images_modified = images.clone()
+
+        # Determine the device to be used (CPU or GPU)
+        if dim == 0:
+            device = 'cpu'
+        else:
+            device = images.get_device()
+            if device == -1:
+                device = 'cpu'
+
+        # Create a mask tensor of ones with the same size as the images
+        mask = torch.ones((images_modified.size(dim), images_modified.size(dim + 1), images_modified.size(dim + 2)),
+                          device=device)
+
+        i = 0
+        while i < images_modified.size(dim + 1):
+            j = 0
+            while j < images_modified.size(dim + 2):
+                # Randomly drop tiles based on the drop rate
+                if np.random.rand() < self.drop_rate:
+                    for k in range(mask.size(0)):
+                        mask[k, i:i + self.tile_size, j:j + self.tile_size] = 0  # Set the tile to zero in the mask
+                j += self.tile_size
+            i += self.tile_size
+
+        # Apply the mask to each image by element-wise multiplication
+        images_modified = images_modified * mask
+        return images_modified
+
+
+# %% [markdown]
+# The **`Occlude`** class represents an image augmentation technique that randomly occludes (drops) tiles within the input images. It can be used to introduce variations during training or testing of a machine learning model.
+# 
+# 1. The class is initialized with two parameters: **`drop_rate`** (probability of dropping a tile) and **`tile_size`** (size of the tiles to be occluded).
+# 
+# 2. The **`__call__`** method is defined, which allows the class instance to be called like a function.
+# 
+# 3. A copy of the input images is created using the **`clone`** method of the **`images`** tensor.
+# 
+# 4. The device is determined based on the **`dim`** parameter. If **`dim`** is 0, the device is set to CPU; otherwise, it uses the device of the input images tensor.
+# 
+# 5. A mask tensor is created with the same dimensions as the input images. It is initialized with ones using the **`torch.ones`** function.
+# 
+# 6. Two nested **`while`** loops are used to iterate over the tiles of the images.
+# 
+# 7. For each tile, a random number is generated between 0 and 1, and if it is less than the drop rate, the tile is occluded.
+# 
+# 8. When a tile needs to be occluded, the corresponding region in the mask tensor is set to zero, effectively occluding that tile.
+
+# %%
+class UnNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, tensor_batch):
+        # Create a copy of the tensor
+        tensor_batch = tensor_batch.clone()
+
+        # Iterate over each channel in the tensor
+        for i in range(len(tensor_batch)):
+            # Iterate over each channel in the tensor
+            for j in range(len(tensor_batch[i])):
+                # Unnormalize the tensor by multiplying by the standard deviation and adding the mean
+                tensor_batch[i][j].mul_(self.std[j]).add_(self.mean[j])
+                # The equivalent of normalization: t.sub_(m).div_(s)
+
+        return tensor_batch
+
+# %% [markdown]
+# 1. The code defines a class called **`UnNormalize`** that is used to reverse the normalization applied to a batch of tensor images. Here's how it works:
+# 
+# 2. The **`__init__`** method initializes the **`UnNormalize`** object with the mean and standard deviation values.
+# 
+# 3. The **`__call__`** method is invoked when an instance of **`UnNormalize`** is called as a function. It takes a batch of tensor images (**`tensor_batch`**) as input and returns the unnormalized batch of images.
+# 
+# 4. The method iterates over each tensor in the batch using a **`for`** loop.
+# 
+# 5. Within the inner loop, it iterates over each channel of the tensor using another **`for`** loop.
+# 
+# 6. For each channel, it performs the unnormalization by multiplying the tensor values by the corresponding standard deviation (**`self.std[j]`**) and adding the mean value (**`self.mean[j]`**).
+# 
+# 7. Finally, it returns the unnormalized tensor batch.
+# 
+# In summary, the **`UnNormalize`** class allows you to reverse the normalization process applied to a batch of tensor images by multiplying the tensor values by the standard deviation and adding the mean for each channel.
+
+# %%
 def get_dataset(dataset_name, dataroot, imageSize, is_train=True, drop_rate=0.0, tile_size=32):
     
             # Use the CIFAR10 dataset
@@ -200,43 +297,6 @@ def get_latent(dim_latent, batch_size, device):
 # 10. The tensor is reshaped to have dimensions **`(batch_size, dim_latent, 1, 1)`** to match the expected input shape for further processing.
 
 # %%
-class UnNormalize(object):
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
-
-    def __call__(self, tensor_batch):
-        # Create a copy of the tensor
-        tensor_batch = tensor_batch.clone()
-
-        # Iterate over each channel in the tensor
-        for i in range(len(tensor_batch)):
-            # Iterate over each channel in the tensor
-            for j in range(len(tensor_batch[i])):
-                # Unnormalize the tensor by multiplying by the standard deviation and adding the mean
-                tensor_batch[i][j].mul_(self.std[j]).add_(self.mean[j])
-                # The equivalent of normalization: t.sub_(m).div_(s)
-
-        return tensor_batch
-
-# %% [markdown]
-# 1. The code defines a class called **`UnNormalize`** that is used to reverse the normalization applied to a batch of tensor images. Here's how it works:
-# 
-# 2. The **`__init__`** method initializes the **`UnNormalize`** object with the mean and standard deviation values.
-# 
-# 3. The **`__call__`** method is invoked when an instance of **`UnNormalize`** is called as a function. It takes a batch of tensor images (**`tensor_batch`**) as input and returns the unnormalized batch of images.
-# 
-# 4. The method iterates over each tensor in the batch using a **`for`** loop.
-# 
-# 5. Within the inner loop, it iterates over each channel of the tensor using another **`for`** loop.
-# 
-# 6. For each channel, it performs the unnormalization by multiplying the tensor values by the corresponding standard deviation (**`self.std[j]`**) and adding the mean value (**`self.mean[j]`**).
-# 
-# 7. Finally, it returns the unnormalized tensor batch.
-# 
-# In summary, the **`UnNormalize`** class allows you to reverse the normalization process applied to a batch of tensor images by multiplying the tensor values by the standard deviation and adding the mean for each channel.
-
-# %%
 def save_fig_losses(epoch, d_losses, g_losses, r_losses_real, r_losses_fake, kl_losses, fid_nrem, fid_rem,  files_dir):
     # Create an array of epoch values from 0 to 'epoch'
     epochs = np.arange(0, epoch+1)
@@ -368,66 +428,6 @@ def save_fig_trainval(epoch, losses, accuracies, directory):
 # 12. Finally, the figure is saved as a PDF file in the specified **`directory`** using **`fig.savefig`**.
 # 
 # This function is useful for visualizing the training and validation progress of a machine learning model. It generates a single figure with two subplots: one for plotting the loss values and another for plotting the accuracy values. The resulting figure is saved as a PDF file for further analysis or reporting
-
-# %%
-import torch
-import numpy as np
-
-class Occlude(object):
-    def __init__(self, drop_rate=0.0, tile_size=7):
-        self.drop_rate = drop_rate
-        self.tile_size = tile_size
-
-    def __call__(self, images, dim=0):
-        # Create a copy of the input images
-        images_modified = images.clone()
-
-        # Determine the device to be used (CPU or GPU)
-        if dim == 0:
-            device = 'cpu'
-        else:
-            device = images.get_device()
-            if device == -1:
-                device = 'cpu'
-
-        # Create a mask tensor of ones with the same size as the images
-        mask = torch.ones((images_modified.size(dim), images_modified.size(dim + 1), images_modified.size(dim + 2)),
-                          device=device)
-
-        i = 0
-        while i < images_modified.size(dim + 1):
-            j = 0
-            while j < images_modified.size(dim + 2):
-                # Randomly drop tiles based on the drop rate
-                if np.random.rand() < self.drop_rate:
-                    for k in range(mask.size(0)):
-                        mask[k, i:i + self.tile_size, j:j + self.tile_size] = 0  # Set the tile to zero in the mask
-                j += self.tile_size
-            i += self.tile_size
-
-        # Apply the mask to each image by element-wise multiplication
-        images_modified = images_modified * mask
-        return images_modified
-
-
-# %% [markdown]
-# The **`Occlude`** class represents an image augmentation technique that randomly occludes (drops) tiles within the input images. It can be used to introduce variations during training or testing of a machine learning model.
-# 
-# 1. The class is initialized with two parameters: **`drop_rate`** (probability of dropping a tile) and **`tile_size`** (size of the tiles to be occluded).
-# 
-# 2. The **`__call__`** method is defined, which allows the class instance to be called like a function.
-# 
-# 3. A copy of the input images is created using the **`clone`** method of the **`images`** tensor.
-# 
-# 4. The device is determined based on the **`dim`** parameter. If **`dim`** is 0, the device is set to CPU; otherwise, it uses the device of the input images tensor.
-# 
-# 5. A mask tensor is created with the same dimensions as the input images. It is initialized with ones using the **`torch.ones`** function.
-# 
-# 6. Two nested **`while`** loops are used to iterate over the tiles of the images.
-# 
-# 7. For each tile, a random number is generated between 0 and 1, and if it is less than the drop rate, the tile is occluded.
-# 
-# 8. When a tile needs to be occluded, the corresponding region in the mask tensor is set to zero, effectively occluding that tile.
 
 # %%
 import torch
