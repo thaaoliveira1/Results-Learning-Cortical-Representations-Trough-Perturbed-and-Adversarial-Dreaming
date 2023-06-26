@@ -1,0 +1,12 @@
+**/.DS_Store
+*.png
+*.pth
+*.pyc
+*.pdf
+*.zip
+*.gz
+*.mat
+*.meta
+**/test_batch
+**/data_batch*
+**/*-ubyte
