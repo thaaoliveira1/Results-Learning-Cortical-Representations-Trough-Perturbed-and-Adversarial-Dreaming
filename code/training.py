@@ -50,9 +50,9 @@ parser.add_argument('--learning_rate_discriminator', type=float, default=0.0002,
 parser.add_argument('--beta1', type=float, default=0.5, help='Beta1 for Adam optimizer')
 parser.add_argument('--lmbd', type=float, default=0.5, help='convex combination factor for REM')
 parser.add_argument('--num_gpus', type=int, default=1, help='Number of GPUs to use')
-parser.add_argument('--output_folder', default='trained_fashion', help='Folder to output images and model checkpoints')
+parser.add_argument('--output_folder', default='output', help='Folder to output images and model checkpoints')
 parser.add_argument('--gpu_id', type=str, default='0', help='The ID of the specified GPU')
-parser.add_argument('--outf', default='trained_fashion', help='folder to output images and model checkpoints')
+parser.add_argument('--outf', default='output', help='folder to output images and model checkpoints')
 
 
 
@@ -88,9 +88,11 @@ print(opt)
 # Specify the GPU ID if using only 1 GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu_id
 
-# Define the directories for saving samples, training curves, and models
-dir_files = './results/' + opt.dataset + '/' + opt.outf  # Directory for saving samples and training curves
-dir_checkpoint = './checkpoints/' + opt.dataset + '/' + opt.outf  # Directory for saving models
+# where to save samples and training curves
+dir_files = './results/'+opt.dataset+'/'+opt.outf
+# where to save model
+dir_checkpoint = './checkpoints/'+opt.dataset+'/'+opt.outf
+
 
 # Create the directories if they don't exist
 try:
@@ -170,11 +172,11 @@ discriminator_optimizer = optim.Adam(discriminator.parameters(), lr=opt.learning
 generator_optimizer = optim.Adam(generator.parameters(), lr=opt.learning_rate_generator, betas=(opt.beta1, 0.999))
 
 # Initialize lists to store losses
-discriminator_losses = []
-generator_losses = []
-real_losses = []  # Losses related to real images
-fake_losses = []  # Losses related to fake/generated images
-kl_losses = []  # Kullback-Leibler divergence losses
+d_losses = []
+g_losses = []
+r_losses_real = []
+r_losses_fake = []
+kl_losses = []
 
 # %% [markdown]
 # The code sets up optimizers for the discriminator and generator models.
@@ -196,25 +198,22 @@ kl_losses = []  # Kullback-Leibler divergence losses
 # 8. **kl_losses:** Stores Kullback-Leibler divergence losses, which are often used in variational autoencoders (VAEs) or other generative models.
 
 # %%
-checkpoint_path = dir_checkpoint + '/trained_fashion.pth'
-
-
-if os.path.exists(checkpoint_path) and opt.is_continue:
-    # Load data from the last checkpoint
+if os.path.exists(dir_checkpoint+'/trained.pth') and opt.is_continue:
+    # Load data from last checkpoint
     print('Loading pre-trained model...')
-    checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(dir_checkpoint+'/trained.pth', map_location=torch.device('cpu'))
     generator.load_state_dict(checkpoint['generator'])
     discriminator.load_state_dict(checkpoint['discriminator'])
-    generator_optimizer.load_state_dict(checkpoint['generator_optimizer'])
-    discriminator_optimizer.load_state_dict(checkpoint['discriminator_optimizer'])
-    discriminator_losses = checkpoint.get('discriminator_losses', [float('inf')])
-    generator_losses = checkpoint.get('generator_losses', [float('inf')])
-    real_losses = checkpoint.get('real_losses', [float('inf')])
-    fake_losses = checkpoint.get('fake_losses', [float('inf')])
+    generator_optimizer.load_state_dict(checkpoint['g_optim'])
+    discriminator_optimizer.load_state_dict(checkpoint['d_optim'])
+    d_losses = checkpoint.get('d_losses', [float('inf')])
+    g_losses = checkpoint.get('g_losses', [float('inf')])
+    r_losses_real = checkpoint.get('r_losses_real', [float('inf')])
+    r_losses_fake = checkpoint.get('r_losses_fake', [float('inf')])
     kl_losses = checkpoint.get('kl_losses', [float('inf')])
-    print('Start training from the loaded model...')
+    print('Start training from loaded model...')
 else:
-    print('No pre-trained model detected. Restarting training...')
+    print('No pre-trained model detected, restart training...')
 
 # %%
 # Define the loss functions
@@ -243,149 +242,184 @@ evaluation_noise = torch.randn(batch_size, latent_dim, device=device)
 # Overall, this code snippet defines the loss functions for the discriminator and reconstruction tasks. The **`BCELoss`** is commonly used for binary classification tasks, such as determining whether an image is real or fake. The **`MSELoss`** is used for measuring the pixel-wise difference between the input and reconstructed images. The tensor placeholders are created to hold the discriminator labels, real and fake label values, and noise for evaluation.
 
 # %%
-# # Enable anomaly detection during training (optional)
-# # torch.autograd.set_detect_anomaly(True)
+# Enable anomaly detection during training (optional)
+# torch.autograd.set_detect_anomaly(True)
 
-# # Training loop
-# for epoch in range(len(discriminator_losses), opt.niter):
+# Training loop
+for epoch in range(len(discriminator_losses), opt.niter):
     
-#     # Initialize lists to store losses and other metrics
-#     store_loss_D = []
-#     store_loss_G = []
-#     store_loss_R_real = []
-#     store_loss_R_fake = []
-#     store_norm = []
-#     store_kl = []
+    # Initialize lists to store losses and other metrics
+    store_loss_D = []
+    store_loss_G = []
+    store_loss_R_real = []
+    store_loss_R_fake = []
+    store_norm = []
+    store_kl = []
 
-#     # Iterate over the data batches
-#     for i, data in enumerate(dataloader, 0):
+    # Iterate over the data batches
+    for i, data in enumerate(dataloader, 0):
 
-#         ############################
-#         # Wake (W)
-#         ###########################
+        ############################
+        # Wake (W)
+        ###########################
 
-#         # Discrimination wake
-#         discriminator_optimizer .zero_grad()
-#         generator_optimizer.zero_grad()
+        # Discrimination wake
+        discriminator_optimizer .zero_grad()
+        generator_optimizer.zero_grad()
 
-#         # Fetch real images and labels
-#         real_image, label = data
-#         real_image, label = real_image.to(device), label.to(device)
+        # Fetch real images and labels
+        real_image, label = data
+        real_image, label = real_image.to(device), label.to(device)
 
-#         # Pass real images through the discriminator
-#         latent_output, dis_output = discriminator(real_image)
+        # Pass real images through the discriminator
+        latent_output, dis_output = discriminator(real_image)
 
-#         # Add noise to the latent space
-#         latent_output_noise = latent_output + opt.epsilon * torch.randn(batch_size, latent_size, device=device)
+        # Add noise to the latent space
+        latent_output_noise = latent_output + opt.epsilon * torch.randn(batch_size, latent_size, device=device)
 
-#         # Set the discriminator label for real images
-#         discriminator_label[:] = real_label_value
+        # Set the discriminator label for real images
+        discriminator_label[:] = real_label_value
 
-#         # Compute the discriminator loss for real images
-#         dis_errD_real = discriminator_criterion(dis_output, discriminator_label)
+        # Compute the discriminator loss for real images
+        dis_errD_real = discriminator_criterion(dis_output, discriminator_label)
 
-#         if opt.R > 0.0:  # if GAN learning occurs
-#             (dis_errD_real).backward(retain_graph=True)
+        if opt.R > 0.0:  # if GAN learning occurs
+            (dis_errD_real).backward(retain_graph=True)
 
-#         # Compute the KL divergence regularization loss
-#         kl = kl_loss(latent_output)
-#         (kl).backward(retain_graph=True)
+        # Compute the KL divergence regularization loss
+        kl = kl_loss(latent_output)
+        (kl).backward(retain_graph=True)
 
-#         # Reconstruct real images from the latent space
-#         reconstructed_image = generator(latent_output_noise, reverse=False)
+        # Reconstruct real images from the latent space
+        reconstructed_image = generator(latent_output_noise, reverse=False)
 
-#         # Compute the reconstruction loss for real images
-#         rec_real = reconstruction_criterion (reconstructed_image, real_image)
+        # Compute the reconstruction loss for real images
+        rec_real = reconstruction_criterion (reconstructed_image, real_image)
 
-#         if opt.W > 0.0:
-#             (opt.W * rec_real).backward()
+        if opt.W > 0.0:
+            (opt.W * rec_real).backward()
 
-#         discriminator_optimizer .step()
-#         generator_optimizer.step()
+        discriminator_optimizer .step()
+        generator_optimizer.step()
 
-#         # Compute the mean of the discriminator output (between 0 and 1)
-#         D_x = dis_output.cpu().mean()
+        # Compute the mean of the discriminator output (between 0 and 1)
+        D_x = dis_output.cpu().mean()
 
-#         # Compute the norm of the latent space representation
-#         latent_norm = torch.mean(torch.norm(latent_output.squeeze(), dim=1)).item()
-
-
-#         ###########################
-#         # NREM perturbed dreaming (N)
-#         ##########################
-#         discriminator_optimizer .zero_grad()
-
-#         # Detach the latent space representation
-#         latent_z = latent_output.detach()
-
-#         with torch.no_grad():
-#             # Generate images from the detached latent space
-#             nrem_image = generator(latent_z)
-
-#             # Apply occlusion to the generated images
-#             occlusion = Occlude(drop_rate=random.random(), tile_size=random.randint(1, 8))
-#             occluded_nrem_image = occlusion(nrem_image, dim=1)
-
-#         # Pass occluded NREM images through the discriminator
-#         latent_recons_dream, _ = discriminator(occluded_nrem_image)
-
-#         # Compute the reconstruction loss for fake images
-#         rec_fake = reconstruction_criterion (latent_recons_dream, latent_output.detach())
-
-#         if opt.N > 0.0:
-#             (opt.N * rec_fake).backward()
-
-#         discriminator_optimizer .step()
+        # Compute the norm of the latent space representation
+        latent_norm = torch.mean(torch.norm(latent_output.squeeze(), dim=1)).item()
 
 
-#         ###########################
-#         # REM adversarial dreaming (R)
-#         ##########################
-#         discriminator_optimizer .zero_grad()
-#         generator_optimizer.zero_grad()
+        ###########################
+        # NREM perturbed dreaming (N)
+        ##########################
+        discriminator_optimizer .zero_grad()
 
-#         # Set the weight for the adversarial dreaming loss
-#         lmbd = opt.lmbd
+        # Detach the latent space representation
+        latent_z = latent_output.detach()
 
-#         # Generate random noise
-#         noise = torch.randn(batch_size, latent_size, device=device)
+        with torch.no_grad():
+            # Generate images from the detached latent space
+            nrem_image = generator(latent_z)
 
-#         if i == 0:
-#             latent_z = 0.5 * latent_output
+            # Apply occlusion to the generated images
+            occlusion = Occlude(drop_rate=random.random(), tile_size=random.randint(1, 8))
+            occluded_nrem_image = occlusion(nrem_image, dim=1)
+
+        # Pass occluded NREM images through the discriminator
+        latent_recons_dream, _ = discriminator(occluded_nrem_image)
+
+        # Compute the reconstruction loss for fake images
+        rec_fake = reconstruction_criterion (latent_recons_dream, latent_output.detach())
+
+        if opt.N > 0.0:
+            (opt.N * rec_fake).backward()
+
+        discriminator_optimizer .step()
 
 
-# %%
-# Check if the trained model file already exists
-model_path = dir_checkpoint 
-if os.path.exists(model_path):
-    print("Trained model already exists. Skipping saving the model.")
-else:
-    # Save the trained model
+       ###########################
+        # REM adversarial dreaming (R)
+        ##########################
+
+        discriminator_optimizer.zero_grad()
+        generator_optimizer.zero_grad()
+        lmbd = opt.lmbd
+        noise = torch.randn(batch_size, latent_size, device=device)
+        if i==0:
+            latent_z = 0.5*latent_output.detach() + 0.5*noise
+        else:
+            latent_z = 0.25*latent_output.detach() + 0.25*old_latent_output + 0.5*noise
+        
+        dreamed_image_adv = generator(latent_z, reverse=True) # activate plasticity switch
+        latent_recons_dream, dis_output = discriminator(dreamed_image_adv)
+        discriminator_label[:] = fake_label_value # should be classified as fake
+        dis_errD_fake = discriminator_criterion(dis_output, discriminator_label)
+        if opt.R > 0.0: # if GAN learning occurs
+            dis_errD_fake.backward(retain_graph=True)
+            discriminator_optimizer.step()
+            generator_optimizer.step()
+        dis_errG = - dis_errD_fake
+
+        D_G_z1 = dis_output.cpu().mean()
+
+        old_latent_output = latent_output.detach()
+        
+        
+        
+        ###########################
+        # Compute average losses
+        ###########################
+        store_loss_G.append(dis_errG.item())
+        store_loss_D.append((dis_errD_fake + dis_errD_real).item())
+        store_loss_R_real.append(rec_real.item())
+        store_loss_R_fake.append(rec_fake.item())
+        store_norm.append(latent_norm)
+        store_kl.append(kl.item())
+        
+
+
+        if i % 200 == 0 and i>1:
+            print('[%d/%d][%d/%d]  Loss_D: %.4f  Loss_G: %.4f  Loss_R_real: %.4f  Loss_R_fake: %.4f  D(x): %.4f  D(G(z)): %.4f  latent_norm : %.4f  '
+                % (epoch, opt.niter, i, len(dataloader),
+                    np.mean(store_loss_D), np.mean(store_loss_G), np.mean(store_loss_R_real), np.mean(store_loss_R_fake), D_x, D_G_z1, np.mean(latent_norm) ))
+            compare_img_rec = torch.zeros(batch_size * 2, real_image.size(1), real_image.size(2), real_image.size(3))
+            with torch.no_grad():
+                reconstructed_image = generator(latent_output)
+            compare_img_rec[::2] = real_image
+            compare_img_rec[1::2] = reconstructed_image
+            vutils.save_image(unorm(compare_img_rec[:128]), '%s/recon_%03d.png' % (dir_files, epoch), nrow=8)
+            fake = unorm(dreamed_image_adv)
+            vutils.save_image(fake[:64].data, '%s/fake_%03d.png' % (dir_files, epoch), nrow=8)
+            
+
+    d_losses.append(np.mean(store_loss_D))
+    g_losses.append(np.mean(store_loss_G))
+    r_losses_real.append(np.mean(store_loss_R_real))
+    r_losses_fake.append(np.mean(store_loss_R_fake))
+    kl_losses.append(np.mean(store_kl))
+    save_fig_losses(epoch, d_losses, g_losses, r_losses_real, r_losses_fake, kl_losses, None, None,  dir_files)
+
+    # do checkpointing
     torch.save({
-        'epoch': epoch,
-        'discriminator_state_dict': discriminator.state_dict(),
-        'generator_state_dict': generator.state_dict(),
-        'discriminator_optimizer_state_dict': discriminator_optimizer.state_dict(),
-        'generator_optimizer_state_dict': generator_optimizer.state_dict(),
-        'losses': {
-            'discriminator': store_loss_D,
-            'generator': store_loss_G,
-            'reconstruction_real': store_loss_R_real,
-            'reconstruction_fake': store_loss_R_fake,
-            'norm': store_norm,
-            'kl': store_kl
-        }
-    }, model_path)
-    print("Trained model saved successfully.")
+        'generator': generator.state_dict(),
+        'discriminator': discriminator.state_dict(),
+        'g_optim': generator_optimizer.state_dict(),
+        'd_optim': discriminator_optimizer.state_dict(),
+        'd_losses': d_losses,
+        'g_losses': g_losses,
+        'r_losses_real': r_losses_real,
+        'r_losses_fake': r_losses_fake,
+        'kl_losses': kl_losses,
+    }, dir_checkpoint+'/trained.pth')
+    
+    # save network after 1 learning epoch
+    if epoch ==1:
+            torch.save({
+        'generator': generator.state_dict(),
+        'discriminator': discriminator.state_dict(),
+        }, dir_checkpoint+'/trained2.pth')
 
-
-# %%
-import os
-
-model_path = os.path.abspath(dir_checkpoint + '/trained_fashion.pth')
-print("Model saved at:", model_path)
-
-# %%
+    print(f'Model successfully saved.')
 
 
 
