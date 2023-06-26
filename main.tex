@@ -19,8 +19,17 @@
 \jmlryear{2023}
 \jmlrworkshop{Report for f}
 %\editors{Knowledge Discovery Course - UNICT}
+\usepackage{hyperref} % For URL linking
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+\usepackage{lipsum} % For dummy text
 
-\title[Title of your solution]{Results: Learning Cortical Representations Through Perturbed and Adversarial Dreaming}
+
+\title[Results: Learning Cortical Representations Through Perturbed and Adversarial Dreaming]{Results: Learning Cortical Representations Through Perturbed and Adversarial Dreaming}
 
  % Use \Name{Author Name} to specify the name.
  % If the surname contains spaces, enclose the surname
@@ -54,19 +63,140 @@
 % More complicate cases, e.g. with dual affiliations and joint authorship
 \midlauthor{\Name{Thamires de Souza Oliveira} \Email{thasouzaoliv@gmail.com}}
 \begin{document}
-
 \maketitle
 
-\section{Model Description}
-\input{text_files/method}
 
-\section{Dataset}
-\input{text_files/dataset}
+\section{The Article}
+The purpose of this report is to replicate and investigate the findings presented in an academic article, which can be accessed through the following link: \url{https://elifesciences.org/articles/76384}.
 
-\section{Training procedure}
-\input{text_files/training_procedure}
+\subsection{Objective}
+The primary objective of the article is to propose a new functional model of cortical representation learning, which posits that dreams, specifically their creative development of episodic memories, play a fundamental role in the formation of semantic representations during the evolutionary process. The authors introduce a cortical architecture inspired by generative adversarial networks (GANs) and train the model using established datasets of natural images to assess the quality of the acquired representations. The research aims to offer insights into the processing and representation of sensory experiences in the brain, with potential implications for comprehending the mechanisms through which humans and other organisms learn from sensory input.
 
-\section{Experimental Results}
-\input{text_files/performance.tex}
+\subsection{Dreams and Semantic Representations}
+The article puts forth the notion that dreams, particularly their ability to combine diverse memories, are pivotal for the development of meaningful knowledge within the brain. This knowledge is stored as semantic representations, which distill pertinent information from sensory experiences while disregarding extraneous details, thereby facilitating their utilization across various brain regions.
+
+\subsection{Semantic Representation Formation}
+To support this proposition, the authors propose a inovative model elucidating how the brain learns and constructs these semantic representations. The model entails a creative process in which information flows from higher to lower brain areas, analogous to the occurrence of dreaming during rapid eye movement (REM) sleep. This process seeks to generate new but plausible sensory experiences by deceiving the brain's internal mechanisms that distinguish between wakefulness and REM sleep.
+
+By generating fresh sensory experiences instead of merely reconstructing past observations, the brain is compelled to comprehend the composition of its sensory input. This perspective aligns with the notion that cortical representations, the neural patterns in the outer layer of the brain, should encapsulate meaningful and abstracted information rather than being tethered to specific contexts or details.
+
+
+\section{Network Structure}
+
+The network structure in this study comprises two primary components: the encoder/discriminator pathway and the generator pathway. Let's explore each component in detail:
+
+\subsection{Encoder/Discriminator Pathway}
+\begin{itemize}
+  \item The encoder (Ez) takes input pixel data and maps it to a latent space.
+  \item Ez consists of four convolutional layers, each with a different number of channels: 64, 128, 256, and 256.
+  \item Each convolutional layer utilizes a 4x4 kernel, a stride of 2, and a LeakyReLU nonlinearity.
+  \item The feature size is reduced by half in each layer.
+  \item The output of the encoder's last convolutional layer is denoted as "z."
+  \item An additional convolutional layer followed by a sigmoid nonlinearity is added on top of the second-to-last layer.
+  \item This layer maps to a single scalar value "d," representing internal/external discrimination.
+  \item The mapping from input data "x" to "d" is referred to as Ed.
+  \item The first three convolutional layers are shared between Ez and Ed.
+\end{itemize}
+
+\subsection{Generator Pathway}
+\begin{itemize}
+  \item The generator (G) takes data from the latent space and maps it back to the pixel space.
+  \item G consists of four deconvolutional layers with different numbers of channels: 256, 128, 64, and 3.
+  \item Each deconvolutional layer employs a 4x4 kernel, a stride of 2, and either a LeakyReLU or tanh nonlinearity.
+  \item The feature size is doubled in each layer.
+  \item The output of the generator represents the reconstructed pixel data.
+\end{itemize}
+
+To summarize, the encoder/discriminator pathway (E) involves Ez, responsible for encoding pixel data to the latent space, and Ed, which performs discrimination. The generator pathway (G) maps data from the latent space back to the pixel space. Both pathways share the first three convolutional layers, with the encoder incorporating an additional layer for discrimination. The generator consists of four deconvolutional layers followed by appropriate non-linearities and aims to reconstruct the pixel data.
+
+
+
+\section{The Datasets}
+
+The model used in this study was trained on four standard datasets of natural images, namely:
+
+\subsection{CIFAR-10 (Canadian Institute for Advanced Research 10)}
+\begin{itemize}
+  \item Composition: CIFAR-10 consists of a collection of 60,000 color images categorized into 10 different classes, with 6,000 images per class.
+  \item Classes: The dataset covers a range of objects, including airplanes, automobiles, birds, cats, deer, dogs, frogs, horses, ships, and trucks.
+  \item Image Size: Each image in CIFAR-10 has a resolution of 32x32 pixels.
+  \item Training and Test Sets: The dataset is split into a training set containing 50,000 images and a test set containing 10,000 images, with an equal distribution of classes in both sets.
+  \item Usage: CIFAR-10 is commonly utilized as a benchmark dataset for evaluating image classification algorithms and serves as a standard reference for machine learning tasks.
+\end{itemize}
+
+\subsection{SVHN (Street View House Numbers)}
+\begin{itemize}
+  \item Composition: SVHN comprises real-world images of house numbers extracted from Google Street View images.
+  \item Classes: The primary focus of the dataset is recognizing and localizing digits ranging from 0 to 9.
+  \item Image Size: The images in SVHN exhibit varying sizes and aspect ratios, generally higher in resolution compared to CIFAR-10 and MNIST.
+  \item Training, Validation, and Test Sets: SVHN provides three distinct sets: a training set with approximately 73,257 images, a validation set with around 26,032 images, and a test set with roughly 26,032 images.
+  \item Usage: SVHN is widely employed for tasks involving digit recognition, object localization, and multi-digit recognition.
+\end{itemize}
+
+\subsection{MNIST (Modified National Institute of Standards and Technology)}
+\begin{itemize}
+  \item Composition: MNIST consists of a collection of handwritten digit images sourced from multiple contributors.
+  \item Classes: The dataset comprises images representing digits ranging from 0 to 9.
+  \item Image Size: Each image in MNIST has a resolution of 28x28 pixels and is presented in grayscale.
+  \item Training, Validation, and Test Sets: MNIST provides a training set with 60,000 images and a separate test set containing 10,000 images. Although a dedicated validation set is not included, researchers often create one by partitioning the training set.
+  \item Usage: MNIST is widely recognized as a fundamental dataset for training and evaluating models in the field of machine learning, particularly in tasks related to handwritten digit recognition.
+\end{itemize}
+
+\subsection{Fashion MNIST}
+\begin{itemize}
+  \item Composition: Fashion MNIST was specifically developed as a drop-in replacement for MNIST, featuring fashion-related images.
+  \item Classes: The dataset encompasses images of various fashion items, such as T-shirts, trousers, pullovers, dresses, coats, sandals, shirts, sneakers, bags, and ankle boots.
+  \item Image Size: Each image in Fashion MNIST has a resolution of 28x28 pixels and is presented in grayscale.
+  \item Training and Test Sets: Similar to MNIST, Fashion MNIST offers a training set consisting of 60,000 images and a test set containing 10,000 images. Researchers have the flexibility to create a validation set by splitting the training set.
+  \item Usage: Fashion MNIST serves as an alternative to MNIST and is commonly utilized to evaluate and compare machine learning models specifically in the domain of fashion-related image classification.
+\end{itemize}
+
+\section{Training}
+
+During the training process, the following key aspects are considered:
+
+\begin{enumerate}
+  \item Optimization Algorithm: We employ the ADAM optimizer, a popular choice in deep learning. ADAM utilizes adaptive learning rates and momentum to effectively update the model's parameters, ensuring efficient convergence during training.
+
+  \item Learning Rate: The learning rate governs the step size taken when updating the model's parameters. We set the learning rate to 0.0002, which controls the magnitude of parameter adjustments made in each iteration, striking a balance between rapid convergence and fine-grained parameter updates.
+
+  \item Mini-Batch Size: To optimize efficiency and leverage parallel processing capabilities, we adopt a mini-batch training approach. This involves performing parameter updates based on subsets, or mini-batches, of the training data. We choose a mini-batch size of 64, indicating that gradients are computed and parameters are updated using 64 samples at a time.
+
+  \item Condition-Specific Objective Functions: We tailor specific loss functions for different conditions or tasks within the model. These loss functions quantify the discrepancy between the model's predictions and the desired outputs for each condition. By customizing the objective functions, we can effectively optimize the model's performance on specific tasks.
+
+  \item Fully Differentiable Model: The model architecture is designed to ensure differentiability for all operations. This means that gradients can be computed for all parameters using backpropagation, facilitating efficient optimization of the model's parameters through gradient-based methods like stochastic gradient descent (SGD). The differentiability property enables smooth and effective updates to the model's parameters during training.
+\end{enumerate}
+
+In summary, the training approach utilizes stochastic gradient descent with mini-batches. We employ the ADAM optimizer with a learning rate of 0.0002 and a mini-batch size of 64. The model incorporates condition-specific loss functions, allowing it to be optimized for different tasks. Additionally, the model's architecture guarantees full differentiability, enabling efficient parameter updates during training.
+
+
+\section{Evaluation Procedure}
+
+The evaluation of the trained model involves several metrics and techniques to assess its performance and characteristics. Here are the key points explained in a clear and concise manner:
+
+\begin{enumerate}
+  \item Linear Classifier Training: A linear classifier is trained using the latent features (Z) extracted from the training dataset images. The classifier employs a weight matrix (W) to project the latent features onto label neurons and generate predictions.
+
+  \item Loss Function: The classifier is trained using a multiclass cross-entropy loss function, which measures the difference between the predicted class probabilities and the target class.
+
+   \item Training Setup: The classifier is trained using mini-batch stochastic gradient descent with a learning rate of 0.2. The training process spans 20 epochs, covering the entire training dataset.
+
+  \item Linear Separability: The performance of the trained classifier is evaluated using a separate test dataset (Xtest) and the inferred latent activities (Ez(Xtest)). Linear separability refers to the classification accuracy achieved by the trained classifier. Class predictions are made by selecting the index of the highest activity in the prediction vector.
+
+  \item Occluded Data Evaluation: To assess the model's performance on occluded data, random square occlusion masks are applied to the test samples. The occlusion size remains fixed at 4. Results are reported for different levels of occlusion probability.
+
+  \item PCA Visualization: The 256-dimensional latent representations (Ez(x)) of the trained model are visualized using Principal Component Analysis (PCA). This reduction algorithm projects the latent representations onto the first two principal components, facilitating visualization.
+
+  \item Latent Space Organization Metrics: Metrics such as intra-class distance and inter-class distance are computed in the encoder latent space (z) to analyze its organization. Average distances are calculated for randomly selected pairs of images from the same class (intra-class) and different classes (inter-class). Ratios of intra-class to inter-class distance and clean-occluded distance to inter-class distance are reported.
+
+  \item Fréchet Inception Distance (FID): FID is used to compare the statistics of generated samples (NREM or REM) to real images from the training dataset. It measures the dissimilarity between the empirical mean and covariance of the activations of the Inception v3 network for the samples and generated images.
+
+  \item Modifications for Pathological Models: For models without certain phases (e.g., NREM or REM), specific modifications are made during evaluation. These modifications include adding Gaussian noise to encoded activities and scaling down the loss for certain phases, ensuring fair comparisons between conditions.
+\end{enumerate}
+
 
 \end{document}
+
+
+
+
