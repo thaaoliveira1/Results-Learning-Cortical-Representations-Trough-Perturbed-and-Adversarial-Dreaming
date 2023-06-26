@@ -246,7 +246,7 @@ evaluation_noise = torch.randn(batch_size, latent_dim, device=device)
 # torch.autograd.set_detect_anomaly(True)
 
 # Training loop
-for epoch in range(len(discriminator_losses), opt.niter):
+for epoch in range(len(d_losses), opt.niter):
     
     # Initialize lists to store losses and other metrics
     store_loss_D = []
