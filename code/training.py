@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser()
 
 # Adding arguments with their default values and descriptions
 parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to network')
-parser.add_argument('--dataset', default='fashion', help='Dataset to use: cifar10 | imagenet | mnist')
+parser.add_argument('--dataset', default='svhn', help='Dataset to use: cifar10 | svnh | mnist')
 parser.add_argument('--dataroot', default='./datasets/', help='Path to the dataset')
 parser.add_argument('--num_workers', type=int, help='Number of data loading workers', default=2)
 parser.add_argument('--is_continue', type=int, default=1, help='Use pre-trained model')
