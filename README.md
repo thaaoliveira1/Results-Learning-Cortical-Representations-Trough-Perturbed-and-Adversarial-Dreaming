@@ -1,20 +1,33 @@
-[![Build Status](https://travis-ci.com/MIDL-Conference/MIDLLatexTemplate.svg?branch=master)](https://travis-ci.com/MIDL-Conference/MIDLLatexTemplate)
+# Results: Learning Cortical Representations through perturbed and adversarial dreaming
+This project is based on the article "Learning Cortical Representations through perturbed and adversarial dreaming," which explores the role of dreams in the formation of meaningful knowledge in the brain.
 
-# Medical Imaging with Deep Learning (MIDL) Latex Template
-Latex template for the [MIDL Conference](http://midl.io). Simple use of the JMLR / PMLR style.
+## Article Summary
 
-# Usage
+The main goal of the article discussed in this project is to propose a new functional model of cortical representation learning that suggests dreams, and in particular their creative combination of episodic memories, play an essential role in forming semantic representations over the course of development. The authors introduce a cortical architecture inspired by generative adversarial networks (GANs) and train the model on standard datasets of natural images to evaluate the quality of the learned representations. The research aims to provide insight into how sensory experience is processed and represented in the brain, with potential implications for understanding how humans and other animals learn from sensory experience.
 
-Please refer to the main JMLR template documentation: http://mirrors.ctan.org/macros/latex/contrib/jmlr/jmlr.pdf
+## Datasets
 
-# Licence
+The datasets used in this project are publicly available and are named:
+- CIFAR10: [Download Dataset](https://www.cs.toronto.edu/~kriz/cifar.html)
+- SVHN: [Download Dataset](http://ufldl.stanford.edu/housenumbers/)
+- MNIST: [Download Dataset](https://www.tensorflow.org/datasets/catalog/mnist?hl=it)
+- Fashion-MNIST: [Download Dataset](https://www.kaggle.com/datasets/zalando-research/fashionmnist)
 
-This material is subject to the LaTeX Project Public License. 
-See http://www.ctan.org/license/lppl1.3 
-for the details of that license.
+## Repository Contents
 
-# Related software
+- The Overleaf Report: The report discussing the article in Overleaf format can be found inside the github repository.
 
-https://ctan.org/tex-archive/macros/latex/contrib/jmlr
+- The `codes` Folder: This folder contains the following codes in both Jupyter Notebook and Python formats:
 
-http://www.dickimaw-books.com/software/makejmlrbookgui/
+  1. `model`: This code implements the model used in the project.
+  2. `functions`: This code includes various functions used for data processing and analysis.
+  3. `training`: This code provides the training process for the model.
+  4. `samples`: This code generates sample images.
+  5. `evaluating`: This code evaluates the model's performance.
+  6. `evaluating_occlusions`: This code evaluates the model's performance with occlusions.
+
+## Results and Resources
+
+The results of the project, including sample images and trained models, are large files that can be accessed through the following Google Drive link: [Results and Resources](https://drive.google.com/drive/folders/1ICiG1oI5mtNa3IMUPqH2Jn6dpg38qHH3).
+
+
