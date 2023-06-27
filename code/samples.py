@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 
 # Adding arguments with their default values and descriptions
 parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to network')
-parser.add_argument('--dataset', default='fashion', help='Dataset to use: cifar10 | imagenet | mnist')
+parser.add_argument('--dataset', default='mnist', help='Dataset to use: cifar10 | imagenet | mnist')
 parser.add_argument('--dataroot', default='./datasets/', help='Path to the dataset')
 parser.add_argument('--num_workers', type=int, help='Number of data loading workers', default=2)
 parser.add_argument('--is_continue', type=int, default=1, help='Use pre-trained model')
@@ -40,7 +40,7 @@ parser.add_argument('--learning_rate_discriminator', type=float, default=0.0002,
 parser.add_argument('--beta1', type=float, default=0.5, help='Beta1 for Adam optimizer')
 parser.add_argument('--lmbd', type=float, default=0.5, help='convex combination factor for REM')
 parser.add_argument('--num_gpus', type=int, default=1, help='Number of GPUs to use')
-parser.add_argument('--output_folder', default='trained_fashion', help='Folder to output images and model checkpoints')
+parser.add_argument('--output_folder', default='trained_mnist', help='Folder to output images and model checkpoints')
 parser.add_argument('--gpu_id', type=str, default='0', help='The ID of the specified GPU')
 parser.add_argument('--outf', default='output', help='folder to output images and model checkpoints')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
