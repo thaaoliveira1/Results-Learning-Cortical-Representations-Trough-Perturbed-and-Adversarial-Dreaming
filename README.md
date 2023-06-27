@@ -5,6 +5,9 @@ This project is based on the article "Learning Cortical Representations through 
 
 The main goal of the article discussed in this project is to propose a new functional model of cortical representation learning that suggests dreams, and in particular their creative combination of episodic memories, play an essential role in forming semantic representations over the course of development. The authors introduce a cortical architecture inspired by generative adversarial networks (GANs) and train the model on standard datasets of natural images to evaluate the quality of the learned representations. The research aims to provide insight into how sensory experience is processed and represented in the brain, with potential implications for understanding how humans and other animals learn from sensory experience.
 
+Link to the original article: [Article Title](https://elifesciences.org/articles/76384)
+
+
 ## Datasets
 
 The datasets used in this project are publicly available and are named:
