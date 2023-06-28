@@ -16,7 +16,6 @@ The datasets used in this project are publicly available and are named:
 - SVHN: [Download Dataset](http://ufldl.stanford.edu/housenumbers/)
 - MNIST: [Download Dataset](https://www.tensorflow.org/datasets/catalog/mnist?hl=it)
 - Fashion-MNIST: [Download Dataset](https://www.kaggle.com/datasets/zalando-research/fashionmnist)
-- 
 
 ## Repository Contents
 
