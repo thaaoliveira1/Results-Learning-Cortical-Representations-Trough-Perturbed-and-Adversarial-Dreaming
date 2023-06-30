@@ -39,6 +39,10 @@ def initialize_weights(module):
 # 
 # 3. If the module is a convolutional layer: The code checks if the class name contains the substring 'Conv'. If it does, this indicates that the module is a convolutional layer. In this case, the weights of the module are initialized using a normal distribution with mean 0 and standard deviation 0.02. This initialization helps in randomly initializing the weights close to zero.
 # 
+# Setting the mean to zero ensures that the initial weights are centered around zero, which can help with the convergence of the neural network during training. By starting with weights centered around zero, the network is less likely to get stuck in the saturation regions of activation functions, which can hinder learning.
+# 
+# The choice of standard deviation 0.02 is a common practice in deep learning. It determines the spread or range of the initial weights. A smaller standard deviation means that the weights will be closer to zero and have less initial diversity. This can be beneficial because it prevents very large initial weights that may cause instability during training.
+# 
 # 4. If the module is a batch normalization layer: The code checks if the class name contains the substring 'BatchNorm'. If it does, this indicates that the module is a batch normalization layer. In this case, the weights of the module are initialized using a normal distribution with mean 1.0 and standard deviation 0.02. Additionally, the bias of the module is set to all zeros. This initialization helps in standardizing the inputs during training.
 # 
 # Overall, this custom weight initialization function ensures that the weights of the convolutional and batch normalization layers are properly initialized with appropriate values, contributing to the effectiveness and stability of the neural network training process.
@@ -48,7 +52,7 @@ import torch
 import numpy as np
 
 class Occlude(object):
-    def __init__(self, drop_rate=0.0, tile_size=7):
+    def __init__(self, drop_rate=0.8, tile_size=7):
         self.drop_rate = drop_rate
         self.tile_size = tile_size
 
