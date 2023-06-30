@@ -1,4 +1,4 @@
-# Exploring the Effects of Perturbed and Adversarial Dreaming on Learning Cortical Representations: A Replication Study of 'Learning Cortical Representations Through Perturbed and Adversarial Dreaming'
+# Exploring the Effects of Perturbed and Adversarial Dreaming
 This project is based on the article "Learning Cortical Representations through perturbed and adversarial dreaming," which explores the role of dreams in the formation of meaningful knowledge in the brain.
 
 Link to the original article: [Learning Cortical Representations](https://elifesciences.org/articles/76384)
